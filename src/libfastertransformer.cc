@@ -347,7 +347,8 @@ std::shared_ptr<AbstractTransformerModel> ModelState::ModelFactory(
       ft_model = std::make_shared<DebertaTritonModel<__nv_bfloat16>>(
             tp, pp, custom_ar, model_dir, is_sparse, remove_padding);
 #endif
-    } else if (model_type == "Llama") {
+    }
+  } else if (model_type == "Llama") {
     const int is_sparse      = param_get_bool(param,"is_sparse", false);
     const int remove_padding = param_get_bool(param,"is_remove_padding", false);
 
