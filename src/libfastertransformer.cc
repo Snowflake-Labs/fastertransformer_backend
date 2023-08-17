@@ -1279,6 +1279,7 @@ ThreadForward(
     std::unique_ptr<AbstractTransformerModelInstance>* ft_model_instance,
     std::shared_ptr<std::unordered_map<std::string, Tensor>>* input_tensors,
     std::shared_ptr<std::unordered_map<std::string, Tensor>>* output_tensors,
+    ft::AbstractInstanceComm* instance_comm,
     std::exception_ptr* exception_ptr,
     const int device_id, const int use_stream_cb,
     stream_callback_ctx_t* context)
@@ -1292,7 +1293,7 @@ ThreadForward(
   if (use_stream_cb) {
     (*ft_model_instance)->registerCallback(streaming_callback, (void*)context);
   }
-  *output_tensors = (*ft_model_instance)->forward(*input_tensors);
+  *output_tensors = (*ft_model_instance)->forward(*input_tensors, instance_comm);
   if (use_stream_cb) {
     (*ft_model_instance)->unRegisterCallback();
   }
