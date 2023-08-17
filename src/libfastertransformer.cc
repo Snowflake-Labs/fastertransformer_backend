@@ -65,6 +65,7 @@
 #include "src/fastertransformer/triton_backend/transformer_triton_backend.hpp"
 #include "src/fastertransformer/utils/Tensor.h"
 #include "src/fastertransformer/utils/cuda_bf16_wrapper.h"
+#include "src/fastertransformer/utils/instance_comm.h"
 #include "src/fastertransformer/utils/mpi_utils.h"
 #include "src/fastertransformer/utils/nccl_utils.h"
 
@@ -724,6 +725,8 @@ class ModelInstanceState : public BackendModelInstance {
   std::vector<std::unique_ptr<AbstractTransformerModelInstance>>
       ft_model_instance_;
 
+  std::unique_ptr<ft::AbstractInstanceComm> instance_comm_;
+
   // inter-node broadcast buffer
   std::vector<char*> bcast_buffers;
 
@@ -848,6 +851,8 @@ ModelInstanceState::ModelInstanceState(
   for (auto& t : threads) {
     t.join();
   }
+
+  instance_comm_ = shared_ft_model->createInstanceComm(tp_pp_size_);
 
   LOG_MESSAGE(
       TRITONSERVER_LOG_INFO,
@@ -1446,7 +1451,7 @@ ModelInstanceState::Execute(
             .c_str());
     threads.push_back(std::thread(
         ThreadForward, &ft_model_instance_[instance_local_id], &input_tensors,
-        &output_tensors_list[instance_local_id], &exception_ptr[instance_local_id], gid,
+        &output_tensors_list[instance_local_id], instance_comm_.get(), &exception_ptr[instance_local_id], gid,
         is_decoupled_ && gid == model_instance_device_id_start_, context));
     LOG_MESSAGE(
         TRITONSERVER_LOG_VERBOSE,
