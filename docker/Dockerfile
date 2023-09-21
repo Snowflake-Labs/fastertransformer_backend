@@ -46,7 +46,7 @@ RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com re
     pip3 install --no-cache-dir cmake==3.24.3
 
 RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
-    make -j src.build CUDA_HOME=/usr/local/cuda
+    make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
 
 RUN mkdir /tmp/openmpi && \
     cd /tmp/openmpi && \
