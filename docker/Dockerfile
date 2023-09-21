@@ -16,6 +16,8 @@ ARG TRITON_VERSION=23.05
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:${TRITON_VERSION}-py3
 FROM ${BASE_IMAGE}
 
+USER root
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         autoconf \
