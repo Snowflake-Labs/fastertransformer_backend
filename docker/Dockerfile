@@ -48,7 +48,10 @@ RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com re
 RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
     make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
 
-RUN rm -rf /opt/hpcx
+RUN rm -rf /opt/hpcx && \
+    wget https://content.mellanox.com/hpc/hpc-x/v2.16/hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
+    tar -xvf hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
+    cp -r hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz/ /opt/hpcx/
 
 RUN mkdir /tmp/openmpi && \
     cd /tmp/openmpi && \
