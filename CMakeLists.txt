@@ -57,7 +57,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
 # Python.h needed by torch headers.
 find_package(Python3 REQUIRED COMPONENTS Development)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /usr/local/mpi/lib)
 
 find_package(CUDA 10.1 REQUIRED)
 if (BUILD_MULTI_GPU)
