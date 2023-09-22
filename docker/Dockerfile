@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG TRITON_VERSION=23.05
+ARG TRITON_VERSION=23.08
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:${TRITON_VERSION}-py3
 FROM ${BASE_IMAGE}
 
@@ -45,13 +45,13 @@ RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com re
     pip3 install --no-cache-dir accelerate transformers huggingface_hub tokenizers SentencePiece sacrebleu datasets tqdm omegaconf rouge_score && \
     pip3 install --no-cache-dir cmake==3.24.3
 
-RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
-    make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
+# RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
+#     make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
 
-RUN rm -rf /opt/hpcx && \
-    wget https://content.mellanox.com/hpc/hpc-x/v2.16/hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
-    tar -xvf hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
-    cp -r hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64/ /opt/hpcx/
+# RUN rm -rf /opt/hpcx && \
+#     wget https://content.mellanox.com/hpc/hpc-x/v2.16/hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
+#     tar -xvf hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
+#     cp -r hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64/ /opt/hpcx/
 
 # RUN mkdir /tmp/openmpi && \
 #     cd /tmp/openmpi && \
