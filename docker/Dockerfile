@@ -48,6 +48,8 @@ RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com re
 RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
     make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
 
+RUN rm -rf /opt/hpcx
+
 RUN mkdir /tmp/openmpi && \
     cd /tmp/openmpi && \
     wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz && \
