@@ -71,28 +71,28 @@ ADD . /workspace/build/fastertransformer_backend
 RUN mkdir -p /workspace/build/fastertransformer_backend/build
 
 WORKDIR /workspace/build/fastertransformer_backend/build
-ARG FORCE_BACKEND_REBUILD=0
-RUN CUDAFLAGS="-include stdio.h" cmake \
-      -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
-      -D CMAKE_BUILD_TYPE=Release \
-      -D ENABLE_FP8=OFF \
-      -D MPI_HOME=/usr/local/mpi/ \
-      -D CMAKE_INSTALL_PREFIX=/opt/tritonserver \
-      -D TRITON_COMMON_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
-      -D TRITON_CORE_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
-      -D TRITON_BACKEND_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
-      .. && \
-    cd _deps/repo-ft-src/ && \
-    git log | head -n 3 2>&1 | tee /workspace/build/fastertransformer_backend/FT_version.txt && \
-    cd /workspace/build/fastertransformer_backend/build && \
-    CUDAFLAGS="-include stdio.h" make -O -j"$(grep -c ^processor /proc/cpuinfo)" install && \
-    rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
-    rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
+# ARG FORCE_BACKEND_REBUILD=0
+# RUN CUDAFLAGS="-include stdio.h" cmake \
+#       -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
+#       -D CMAKE_BUILD_TYPE=Release \
+#       -D ENABLE_FP8=OFF \
+#       -D MPI_HOME=/usr/local/mpi/ \
+#       -D CMAKE_INSTALL_PREFIX=/opt/tritonserver \
+#       -D TRITON_COMMON_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
+#       -D TRITON_CORE_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
+#       -D TRITON_BACKEND_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
+#       .. && \
+#     cd _deps/repo-ft-src/ && \
+#     git log | head -n 3 2>&1 | tee /workspace/build/fastertransformer_backend/FT_version.txt && \
+#     cd /workspace/build/fastertransformer_backend/build && \
+#     CUDAFLAGS="-include stdio.h" make -O -j"$(grep -c ^processor /proc/cpuinfo)" install && \
+#     rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
+#     rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
 
-ENV NCCL_LAUNCH_MODE=GROUP
-ENV WORKSPACE /workspace
-WORKDIR /workspace
+# ENV NCCL_LAUNCH_MODE=GROUP
+# ENV WORKSPACE /workspace
+# WORKDIR /workspace
 
-RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config && \
-    mkdir /var/run/sshd -p
+# RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config && \
+#     mkdir /var/run/sshd -p
 
