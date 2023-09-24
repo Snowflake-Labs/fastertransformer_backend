@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG TRITON_VERSION=23.05
+ARG TRITON_VERSION=23.06
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:${TRITON_VERSION}-py3
 FROM ${BASE_IMAGE}
+
+USER root
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -39,37 +41,58 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cu118 torch==2.0.1+cu118 && \
-    pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com regex fire tritonclient[all] && \
+RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com regex fire tritonclient[all] && \
     pip3 install --no-cache-dir accelerate transformers huggingface_hub tokenizers SentencePiece sacrebleu datasets tqdm omegaconf rouge_score && \
     pip3 install --no-cache-dir cmake==3.24.3
+
+RUN rm -rf /opt/hpcx
+
+RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
+    make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
+
+# RUN rm -rf /opt/hpcx && \
+#     wget https://content.mellanox.com/hpc/hpc-x/v2.16/hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
+#     tar -xvf hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
+#     cp -r hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64/ /opt/hpcx/
+
+RUN mkdir /tmp/openmpi && \
+    cd /tmp/openmpi && \
+    wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz && \
+    tar zxf openmpi-4.1.5.tar.gz && \
+    cd openmpi-4.1.5 && \
+    ./configure --enable-orterun-prefix-by-default && \
+    make -j $(nproc) all && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/openmpi
 
 # backend build
 ADD . /workspace/build/fastertransformer_backend
 RUN mkdir -p /workspace/build/fastertransformer_backend/build
 
 WORKDIR /workspace/build/fastertransformer_backend/build
-ARG FORCE_BACKEND_REBUILD=0
-RUN CUDAFLAGS="-include stdio.h" cmake \
-      -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
-      -D CMAKE_BUILD_TYPE=Release \
-      -D ENABLE_FP8=OFF \
-      -D CMAKE_INSTALL_PREFIX=/opt/tritonserver \
-      -D TRITON_COMMON_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
-      -D TRITON_CORE_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
-      -D TRITON_BACKEND_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
-      .. && \
-    cd _deps/repo-ft-src/ && \
-    git log | head -n 3 2>&1 | tee /workspace/build/fastertransformer_backend/FT_version.txt && \
-    cd /workspace/build/fastertransformer_backend/build && \
-    CUDAFLAGS="-include stdio.h" make -O -j"$(grep -c ^processor /proc/cpuinfo)" install && \
-    rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
-    rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
+# ARG FORCE_BACKEND_REBUILD=0
+# RUN CUDAFLAGS="-include stdio.h" cmake \
+#       -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
+#       -D CMAKE_BUILD_TYPE=Release \
+#       -D ENABLE_FP8=OFF \
+#       -D MPI_HOME=/usr/local/mpi/ \
+#       -D CMAKE_INSTALL_PREFIX=/opt/tritonserver \
+#       -D TRITON_COMMON_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
+#       -D TRITON_CORE_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
+#       -D TRITON_BACKEND_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
+#       .. && \
+#     cd _deps/repo-ft-src/ && \
+#     git log | head -n 3 2>&1 | tee /workspace/build/fastertransformer_backend/FT_version.txt && \
+#     cd /workspace/build/fastertransformer_backend/build && \
+#     CUDAFLAGS="-include stdio.h" make -O -j"$(grep -c ^processor /proc/cpuinfo)" install && \
+#     rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
+#     rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
 
-ENV NCCL_LAUNCH_MODE=GROUP
-ENV WORKSPACE /workspace
-WORKDIR /workspace
+# ENV NCCL_LAUNCH_MODE=GROUP
+# ENV WORKSPACE /workspace
+# WORKDIR /workspace
 
-RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config && \
-    mkdir /var/run/sshd -p
+# RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config && \
+#     mkdir /var/run/sshd -p
 
