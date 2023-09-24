@@ -45,24 +45,26 @@ RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com re
     pip3 install --no-cache-dir accelerate transformers huggingface_hub tokenizers SentencePiece sacrebleu datasets tqdm omegaconf rouge_score && \
     pip3 install --no-cache-dir cmake==3.24.3
 
-# RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
-#     make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
+RUN rm -rf /opt/hpcx
+
+RUN git clone https://github.com/NVIDIA/nccl.git && cd nccl && \
+    make -j src.build CUDA_HOME=/usr/local/cuda BUILDDIR=/usr
 
 # RUN rm -rf /opt/hpcx && \
 #     wget https://content.mellanox.com/hpc/hpc-x/v2.16/hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
 #     tar -xvf hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64.tbz && \
 #     cp -r hpcx-v2.16-gcc-mlnx_ofed-ubuntu22.04-cuda12-gdrcopy2-nccl2.18-x86_64/ /opt/hpcx/
 
-# RUN mkdir /tmp/openmpi && \
-#     cd /tmp/openmpi && \
-#     wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz && \
-#     tar zxf openmpi-4.1.5.tar.gz && \
-#     cd openmpi-4.1.5 && \
-#     ./configure --enable-orterun-prefix-by-default && \
-#     make -j $(nproc) all && \
-#     make install && \
-#     ldconfig && \
-#     rm -rf /tmp/openmpi
+RUN mkdir /tmp/openmpi && \
+    cd /tmp/openmpi && \
+    wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz && \
+    tar zxf openmpi-4.1.5.tar.gz && \
+    cd openmpi-4.1.5 && \
+    ./configure --enable-orterun-prefix-by-default && \
+    make -j $(nproc) all && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/openmpi
 
 # backend build
 ADD . /workspace/build/fastertransformer_backend
@@ -74,7 +76,7 @@ RUN CUDAFLAGS="-include stdio.h" cmake \
       -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -D CMAKE_BUILD_TYPE=Release \
       -D ENABLE_FP8=OFF \
-    #   -D CMAKE_PREFIX_PATH=/usr/local/mpi/ \
+      -D CMAKE_PREFIX_PATH=/usr/local/mpi/ \
       -D CMAKE_INSTALL_PREFIX=/opt/tritonserver \
       -D TRITON_COMMON_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
       -D TRITON_CORE_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
