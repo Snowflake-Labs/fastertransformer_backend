@@ -60,7 +60,7 @@ RUN mkdir /tmp/openmpi && \
     wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz && \
     tar zxf openmpi-4.1.5.tar.gz && \
     cd openmpi-4.1.5 && \
-    ./configure --enable-orterun-prefix-by-default && \
+    ./configure --enable-orterun-prefix-by-default --prefix=/usr/local/opt/openmpi && \
     make -j $(nproc) all && \
     make install && \
     ldconfig && \
