@@ -39,8 +39,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cu118 torch==2.0.1+cu118 && \
-    pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com regex fire tritonclient[all] && \
+RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com regex fire tritonclient[all] && \
     pip3 install --no-cache-dir tokenizers sacrebleu datasets tqdm omegaconf rouge_score && \
     pip3 install --no-cache-dir cmake==3.24.3
 
