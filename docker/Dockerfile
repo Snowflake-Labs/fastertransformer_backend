@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG TRITON_VERSION=23.05
+ARG TRITON_VERSION=23.07
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:${TRITON_VERSION}-py3
 FROM ${BASE_IMAGE}
 
@@ -35,14 +35,44 @@ RUN apt-get update && \
         unzip \
         zstd \
         zip \
-        zsh && \
+        zsh \
+        pciutils \
+        environment-modules \
+        tcl \
+        libhwloc-dev \
+        udev \
+        dmidecode \
+        ethtool \
+        iproute2 \ 
+        libevent-pthreads-2.1-7 \
+        libhwloc-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cu118 torch==2.0.1+cu118 && \
-    pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com regex fire tritonclient[all] && \
-    pip3 install --no-cache-dir accelerate transformers huggingface_hub tokenizers SentencePiece sacrebleu datasets tqdm omegaconf rouge_score && \
+RUN pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com regex fire tritonclient[all] && \
+    pip3 install --no-cache-dir psutil transformers huggingface_hub tokenizers SentencePiece sacrebleu datasets tqdm omegaconf rouge_score && \
+    pip3 install --no-cache-dir --no-deps accelerate && \
     pip3 install --no-cache-dir cmake==3.24.3
+
+# We will use AWS's openmpi that comes with EFA
+# Install EFA
+RUN curl -O https://efa-installer.amazonaws.com/aws-efa-installer-1.27.0.tar.gz
+RUN tar -xf aws-efa-installer-1.27.0.tar.gz && \
+    cd aws-efa-installer && \
+    ./efa_installer.sh -y -g -d --skip-kmod --skip-limit-conf --no-verify 
+
+# Install aws-ofi-nccl plugin
+RUN wget https://github.com/aws/aws-ofi-nccl/releases/download/v1.7.3-aws/aws-ofi-nccl-1.7.3-aws.tar.gz
+RUN tar -xf aws-ofi-nccl-1.7.3-aws.tar.gz && \
+    cd aws-ofi-nccl-1.7.3-aws && \
+    ./configure --prefix=/opt/aws-ofi-nccl \
+    --with-mpi=/opt/amazon/openmpi \
+    --with-libfabric=/opt/amazon/efa \
+    --with-cuda=/usr/local/cuda \
+    --enable-platform-aws && \
+    make && make install
+
+ENV PATH=/opt/amazon/openmpi/bin/:$PATH
 
 # backend build
 ADD . /workspace/build/fastertransformer_backend
