@@ -66,8 +66,8 @@ RUN CUDAFLAGS="-include stdio.h" cmake \
     rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
     rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
 
-RUN mkdir -p /workspace/build/fastertransformer_backend/isolated-batcher/build
-WORKDIR /workspace/build/fastertransformer_backend/isolated-batcher/build
+RUN mkdir -p /workspace/build/fastertransformer_backend/corvo-batcher/build
+WORKDIR /workspace/build/fastertransformer_backend/corvo-batcher/build
 RUN CUDAFLAGS="-include stdio.h" cmake \
     -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
     -D CMAKE_BUILD_TYPE=Release \
@@ -77,7 +77,7 @@ RUN CUDAFLAGS="-include stdio.h" cmake \
     -D TRITON_CORE_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
     -D TRITON_BACKEND_REPO_TAG="r${NVIDIA_TRITON_SERVER_VERSION}" \
     .. && \
-    cd /workspace/build/fastertransformer_backend/isolated-batcher/build && \
+    cd /workspace/build/fastertransformer_backend/corvo-batcher/build && \
     CUDAFLAGS="-include stdio.h" make -O -j"$(grep -c ^processor /proc/cpuinfo)" install && \
     rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
     rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
