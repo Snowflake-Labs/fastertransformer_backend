@@ -1,0 +1,13 @@
+include(CMakeFindDependencyMacro)
+
+get_filename_component(
+  corvo_batcher_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH
+)
+
+list(APPEND CMAKE_MODULE_PATH ${corvo_batcher_CMAKE_DIR})
+
+if(NOT TARGET corvo-batcher)
+  include("${corvo_batcher_CMAKE_DIR}/IsolatedBatcherTargets.cmake")
+endif()
+
+set(corvo_batcher_LIBRARIES corvo-batcher)
