@@ -92,7 +92,7 @@ endif()
 # Install
 #
 include(GNUInstallDirs)
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/IsolatedBatcher)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/CorvoBatcher)
 
 install(
   TARGETS
@@ -107,7 +107,7 @@ install(
   EXPORT
     triton-corvo-batcher-targets
   FILE
-    IsolatedBatcherTargets.cmake
+    CorvoBatcherTargets.cmake
   NAMESPACE
     triton-corvo-batcher
   DESTINATION

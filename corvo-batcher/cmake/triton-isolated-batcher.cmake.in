@@ -7,7 +7,7 @@ get_filename_component(
 list(APPEND CMAKE_MODULE_PATH ${corvo_batcher_CMAKE_DIR})
 
 if(NOT TARGET corvo-batcher)
-  include("${corvo_batcher_CMAKE_DIR}/IsolatedBatcherTargets.cmake")
+  include("${corvo_batcher_CMAKE_DIR}/CorvoBatcherTargets.cmake")
 endif()
 
 set(corvo_batcher_LIBRARIES corvo-batcher)
