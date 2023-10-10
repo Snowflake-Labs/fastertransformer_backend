@@ -24,7 +24,7 @@ class CorvoBatcher {
     return false;
   }
 
-  bool release()
+  void release()
   {
     std::unique_lock lock(mu_);
     n_++;
@@ -121,7 +121,7 @@ TRITONBACKEND_ModelBatchInitialize(
 TRITONBACKEND_ISPEC TRITONSERVER_Error*
 TRITONBACKEND_ModelBatchFinalize(void* userp)
 {
-  reinterpret_cast<CorvoBatcher*>(userp)->semaphore.release();
+  reinterpret_cast<CorvoBatcher*>(userp)->release();
   return nullptr;
 }
 }
