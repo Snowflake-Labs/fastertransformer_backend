@@ -2,7 +2,8 @@
 // - Prevents merging of batches.
 // - Limits the number of concurrent requests.
 
-#include <semaphore>
+#include <condition_variable>
+#include <mutex>
 
 #include "triton/core/tritonbackend.h"
 
@@ -10,8 +11,34 @@ namespace {
 
 constexpr uint64_t kNumConcurrentRequest = 16;
 
+// Semaphore implements a basic semaphore, because they don't exist in std
+// until c++20.
+class Semaphore {
+ public:
+  Semaphore(uint64_t n) : cv_(mu), n_(n) {}
+  void acquire()
+  {
+    std::unique_lock lock(mu_);
+    cv_.wait(lock, [] { return n_ > 0; });
+    n_--;
+  }
+
+  void release()
+  {
+    std::unique_lock lock(mu_);
+    n_++;
+    cv_.notify();
+  }
+
+ private:
+  std::mutex mu_;
+  std::condition_variable cv_;
+  uint64_t n_;
+};
+
 struct CorvoBatcher {
-  std::counting_semaphore semaphore;
+  CorvoBatcher(uint64_t n) : semaphore(n) {}
+  Semaphore semaphore;
 };
 
 extern "C" {
@@ -37,7 +64,7 @@ TRITONBACKEND_ISPEC TRITONSERVER_Error*
 TRITONBACKEND_ModelBatcherInitialize(
     TRITONBACKEND_Batcher** batcher, TRITONBACKEND_Model* model)
 {
-  *batcher = static_cast<TRITONBACKEND_Batcher*>(
+  *batcher = reinterpret_cast<TRITONBACKEND_Batcher*>(
       new CorvoBatcher(kNumConcurrentRequest));
   return nullptr;
 }
@@ -51,7 +78,7 @@ TRITONBACKEND_ModelBatcherInitialize(
 TRITONBACKEND_ISPEC TRITONSERVER_Error*
 TRITONBACKEND_ModelBatcherFinalize(TRITONBACKEND_Batcher* batcher)
 {
-  delete static_cast<CorvoBatcher*>(batcher);
+  delete reinterpret_cast<CorvoBatcher*>(batcher);
   return nullptr;
 }
 
@@ -83,7 +110,7 @@ TRITONBACKEND_ISPEC TRITONSERVER_Error*
 TRITONBACKEND_ModelBatchInitialize(
     const TRITONBACKEND_Batcher* batcher, void** userp)
 {
-  if (static_cast<CorvoBatcher*>(batcher)->semaphore.try_acquire()) {
+  if (reinterpret_cast<CorvoBatcher*>(batcher)->semaphore.try_acquire()) {
     *userp = batcher;
     return nullptr;
   }
@@ -99,7 +126,7 @@ TRITONBACKEND_ModelBatchInitialize(
 TRITONBACKEND_ISPEC TRITONSERVER_Error*
 TRITONBACKEND_ModelBatchFinalize(void* userp)
 {
-  static_cast<CorvoBatcher*>(batcher)->semaphore.release();
+  reinterpret_cast<CorvoBatcher*>(userp)->semaphore.release();
   return nullptr;
 }
 }
