@@ -2,7 +2,6 @@
 // - Prevents merging of batches.
 // - Limits the number of concurrent requests.
 
-#include <condition_variable>
 #include <mutex>
 
 #include "triton/core/tritonbackend.h"
@@ -11,34 +10,29 @@ namespace {
 
 constexpr uint64_t kNumConcurrentRequest = 16;
 
-// Semaphore implements a basic semaphore, because they don't exist in std
-// until c++20.
-class Semaphore {
+class CorvoBatcher {
  public:
-  Semaphore(uint64_t n) : cv_(mu), n_(n) {}
-  void acquire()
+  CorvoBatcher(uint64_t n) : n_(n) {}
+
+  bool tryAcquire()
   {
     std::unique_lock lock(mu_);
-    cv_.wait(lock, [] { return n_ > 0; });
-    n_--;
+    if (n_ > 0) {
+      n_--;
+      return true;
+    }
+    return false;
   }
 
-  void release()
+  bool release()
   {
     std::unique_lock lock(mu_);
     n_++;
-    cv_.notify();
   }
 
  private:
   std::mutex mu_;
-  std::condition_variable cv_;
-  uint64_t n_;
-};
-
-struct CorvoBatcher {
-  CorvoBatcher(uint64_t n) : semaphore(n) {}
-  Semaphore semaphore;
+  uint64_t n_;  // protected by mu_
 };
 
 extern "C" {
@@ -110,12 +104,13 @@ TRITONBACKEND_ISPEC TRITONSERVER_Error*
 TRITONBACKEND_ModelBatchInitialize(
     const TRITONBACKEND_Batcher* batcher, void** userp)
 {
-  if (reinterpret_cast<CorvoBatcher*>(batcher)->semaphore.try_acquire()) {
-    *userp = batcher;
+  if (const_cast<CorvoBatcher*>(reinterpret_cast<const CorvoBatcher*>(batcher))
+          ->tryAcquire()) {
+    *userp = const_cast<void*>(reinterpret_cast<const void*>(batcher));
     return nullptr;
   }
   return TRITONSERVER_ErrorNew(
-      TRITONSERVER_ERROR_UNAVAILABLE, "too many concurrent requests")
+      TRITONSERVER_ERROR_UNAVAILABLE, "too many concurrent requests");
 }
 
 /// Callback to be invoked when Triton has finishing forming a batch.
