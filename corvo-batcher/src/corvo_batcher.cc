@@ -1,10 +1,14 @@
-#include "corvo_batcher.h"
+// Custom batcher for corvo, which:
+// - Prevents merging of batches.
+// - Limits the number of concurrent requests.
 
 #include <semaphore>
 
 #include "triton/core/tritonbackend.h"
 
-namespace snowflake::corvo_batcher { namespace {
+namespace {
+
+constexpr uint64_t kNumConcurrentRequest = 16;
 
 struct CorvoBatcher {
   std::counting_semaphore semaphore;
@@ -34,7 +38,7 @@ TRITONBACKEND_ModelBatcherInitialize(
     TRITONBACKEND_Batcher** batcher, TRITONBACKEND_Model* model)
 {
   *batcher = static_cast<TRITONBACKEND_Batcher*>(
-      new CorvoBatcher(max_concurrent_requests));
+      new CorvoBatcher(kNumConcurrentRequest));
   return nullptr;
 }
 
@@ -100,4 +104,4 @@ TRITONBACKEND_ModelBatchFinalize(void* userp)
 }
 }
 
-}}  // namespace snowflake::corvo_batcher
+}  // namespace
