@@ -72,7 +72,8 @@ RUN tar -xf aws-ofi-nccl-1.7.3-aws.tar.gz && \
     --enable-platform-aws && \
     make && make install
 
-ENV PATH=/opt/amazon/openmpi/bin/:$PATH
+ENV LD_LIBRARY_PATH="/opt/aws-ofi-nccl/lib:$LD_LIBRARY_PATH"
+ENV PATH="/opt/aws-ofi-nccl/bin:/opt/amazon/efa:/home/mltraining/.local/bin:/opt/amazon/openmpi/bin/:$PATH"
 
 # backend build
 ADD . /workspace/build/fastertransformer_backend
