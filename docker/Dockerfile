@@ -72,8 +72,11 @@ RUN tar -xf aws-ofi-nccl-1.7.3-aws.tar.gz && \
     --enable-platform-aws && \
     make && make install
 
-ENV LD_LIBRARY_PATH="/opt/aws-ofi-nccl/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH"
-ENV PATH="/opt/aws-ofi-nccl/bin:/opt/amazon/efa:/opt/amazon/openmpi/bin:$PATH"
+ENV PATH=/opt/amazon/openmpi/bin/:$PATH
+ENV LD_LIBRARY_PATH=/opt/amazon/efa/lib:$LD_LIBRARY_PATH
+RUN export OPAL_PREFIX=""
+ENV LD_LIBRARY_PATH="/opt/aws-ofi-nccl/lib:$LD_LIBRARY_PATH"
+ENV PATH="/opt/aws-ofi-nccl/bin:/opt/amazon/efa:/home/tritonserver/.local/bin:${PATH}"
 
 # backend build
 ADD . /workspace/build/fastertransformer_backend
