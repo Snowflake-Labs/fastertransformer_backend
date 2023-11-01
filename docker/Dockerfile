@@ -27,7 +27,7 @@ RUN apt-get update && \
         libz-dev \
         locales-all \
         mosh \
-        netstat \
+        net-tools \
         openssh-server \
         python3-dev \
         rapidjson-dev \
