@@ -69,6 +69,7 @@ RUN CUDAFLAGS="-include stdio.h" cmake \
 
 ENV NCCL_LAUNCH_MODE=GROUP
 ENV WORKSPACE /workspace
+ENV PYTHONIOENCODING=UTF-8
 WORKDIR /workspace
 
 RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config && \
