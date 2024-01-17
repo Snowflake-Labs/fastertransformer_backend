@@ -50,6 +50,7 @@
 // FT's libraries have dependency with triton's lib
 #include "src/fastertransformer/triton_backend/bert/BertTritonModel.h"
 #include "src/fastertransformer/triton_backend/bart/BartTritonModel.h"
+#include "src/fastertransformer/triton_backend/m2m/M2MTritonModel.h"
 #include "src/fastertransformer/triton_backend/deberta/DebertaTritonModel.h"
 #include "src/fastertransformer/triton_backend/gptj/GptJTritonModel.h"
 #include "src/fastertransformer/triton_backend/gptj/GptJTritonModelInstance.h"
@@ -357,6 +358,19 @@ std::shared_ptr<AbstractTransformerModel> ModelState::ModelFactory(
 #ifdef ENABLE_BF16
     } else if (data_type == "bf16") {
       ft_model = std::make_shared<BartTritonModel<__nv_bfloat16>>(
+            tp, pp, custom_ar, model_dir, 0);
+#endif
+    }
+  } else if (model_type == "m2m") {
+    if (data_type == "fp16") {
+      ft_model = std::make_shared<M2MTritonModel<half>>(
+            tp, pp, custom_ar, model_dir, 0);
+    } else if (data_type == "fp32") {
+      ft_model = std::make_shared<M2MTritonModel<float>>(
+            tp, pp, custom_ar, model_dir, 0);
+#ifdef ENABLE_BF16
+    } else if (data_type == "bf16") {
+      ft_model = std::make_shared<M2MTritonModel<__nv_bfloat16>>(
             tp, pp, custom_ar, model_dir, 0);
 #endif
     }
