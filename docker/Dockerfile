@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG TRITON_VERSION=24.09
+ARG TRITON_VERSION=23.05
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:${TRITON_VERSION}-py3
 FROM ${BASE_IMAGE}
 
@@ -67,6 +67,11 @@ RUN CUDAFLAGS="-include stdio.h" cmake \
     CUDAFLAGS="-include stdio.h" make -O -j"$(grep -c ^processor /proc/cpuinfo)" install && \
     rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
     rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
+
+# Removing git because of CVEs, no longer needed after build
+RUN apt-get remove git git-man -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV NCCL_LAUNCH_MODE=GROUP
 ENV WORKSPACE /workspace
