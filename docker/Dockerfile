@@ -69,7 +69,7 @@ RUN CUDAFLAGS="-include stdio.h" cmake \
     rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
 
 # Removing git because of CVEs, no longer needed after build
-RUN apt-get remove git git-man -y && \
+RUN apt-get purge git git-man -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
