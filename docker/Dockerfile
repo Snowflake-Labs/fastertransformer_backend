@@ -68,6 +68,11 @@ RUN CUDAFLAGS="-include stdio.h" cmake \
     rm /workspace/build/fastertransformer_backend/build/bin/*_example -rf && \
     rm /workspace/build/fastertransformer_backend/build/lib/lib*Backend.so -rf
 
+# Removing git because of CVEs, no longer needed after build
+RUN apt-get purge git git-man -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV NCCL_LAUNCH_MODE=GROUP
 ENV WORKSPACE /workspace
 WORKDIR /workspace
