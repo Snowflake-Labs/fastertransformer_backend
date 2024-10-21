@@ -16,6 +16,11 @@ ARG TRITON_VERSION=23.05
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:${TRITON_VERSION}-py3
 FROM ${BASE_IMAGE}
 
+# Removing git because of CVEs, no longer needed after build
+RUN apt-get purge libarchive-dev -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         autoconf \
@@ -79,4 +84,3 @@ WORKDIR /workspace
 
 RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config && \
     mkdir /var/run/sshd -p
-
