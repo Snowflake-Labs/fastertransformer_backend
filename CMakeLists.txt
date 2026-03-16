@@ -171,7 +171,7 @@ target_link_directories(
   ${CUDA_PATH}/lib64
   )
 
-target_compile_features(triton-fastertransformer-backend PRIVATE cxx_std_14)
+target_compile_features(triton-fastertransformer-backend PRIVATE cxx_std_17)
 target_compile_options(
   triton-fastertransformer-backend PRIVATE
   $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
