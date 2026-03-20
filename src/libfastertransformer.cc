@@ -1948,7 +1948,13 @@ TRITONBACKEND_ModelInitialize(TRITONBACKEND_Model* model)
   // Create a ModelState object and associate it with the
   // TRITONBACKEND_Model.
   ModelState* model_state;
-  RETURN_IF_ERROR(ModelState::Create(model, &model_state));
+  try {
+    RETURN_IF_ERROR(ModelState::Create(model, &model_state));
+  } catch (const std::exception& e) {
+    return TRITONSERVER_ErrorNew(
+        TRITONSERVER_ERROR_INTERNAL,
+        (std::string("Failed to initialize model '") + name + "': " + e.what()).c_str());
+  }
   RETURN_IF_ERROR(
       TRITONBACKEND_ModelSetState(model, reinterpret_cast<void*>(model_state)));
 
@@ -1967,10 +1973,9 @@ TRITONBACKEND_ModelFinalize(TRITONBACKEND_Model* model)
 
   delete model_state;
 
-  LOG_MESSAGE(
-      TRITONSERVER_LOG_INFO, "TRITONBACKEND_ModelFinalize: MPI Finalize");
-
-  ft::mpi::finalize();
+  // MPI_Finalize is not called here — it was initialized once at the backend
+  // level (TRITONBACKEND_Initialize) and must outlive all model instances.
+  // Calling it per-model would crash subsequent model initializations.
 
   return nullptr;  // success
 }

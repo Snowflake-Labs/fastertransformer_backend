@@ -16,29 +16,6 @@ ARG TRITON_VERSION=26.02
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:${TRITON_VERSION}-py3
 FROM ${BASE_IMAGE}
 
-#RUN apt-get update && \
-#    apt-get install -y --no-install-recommends \
-#        autoconf \
-#        autogen \
-#        clangd \
-#        gdb \
-#        git-lfs \
-#        libb64-dev \
-#        libz-dev \
-#        locales-all \
-#        mosh \
-#        openssh-server \
-#        python3-dev \
-#        rapidjson-dev \
-#        sudo \
-#        tmux \
-#        unzip \
-#        zstd \
-#        zip \
-#        zsh && \
-#    apt-get clean && \
-#    rm -rf /var/lib/apt/lists/*
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         autoconf \
@@ -103,7 +80,7 @@ RUN cd _deps/repo-ft-src/ && \
 
 # Removing redandant tools because of CVEs, no longer needed after build
 RUN apt-get purge -y \
-      git git-man vim vim-tiny curl wget openssh-client patch hwdata doca-sdk-common libfabric-aws-bin libfabric-aws-dev \
+      git git-man vim vim-tiny wget openssh-client patch hwdata doca-sdk-common libfabric-aws-bin libfabric-aws-dev \
       binutils-x86-64-linux-gnu libpmi2-0-dev gpg gpgconf libcurl4-openssl-dev jq \
       autoconf \
       autogen \
@@ -113,6 +90,7 @@ RUN apt-get purge -y \
     apt-get autoremove --purge -y && \
     dpkg -l | awk '/^rc/ {print $2}' | xargs -r dpkg --purge && \
     apt-get clean && \
+    echo "#!/usr/bin/sh\necho ssh: Could not resolve hostname mpi-is-disabled: nodename nor servname provided, or not known\nexit 255" >/usr/bin/ssh && chmod +x /usr/bin/ssh && \
     rm -rf /usr/local/cuda/{NsightSystems-cli*,bin/nsys,extras/CUPTI,gds} && \
     rm -rf /opt/nvidia/{nsight-systems-cli,nsight-compute} && \
     rm -rf /var/lib/apt/lists/*

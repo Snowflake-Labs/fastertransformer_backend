@@ -122,3 +122,36 @@ with open(utils_cmake, "w") as f:
     f.write(ucm)
 
 print("Patched utils/CMakeLists.txt OK")
+
+# ---------------------------------------------------------------------------
+# Patch cuda_utils.h — make getDeviceCount() return 0 instead of aborting
+# when CUDA is unavailable (no driver / no GPUs).
+# ---------------------------------------------------------------------------
+cuda_utils_path = os.path.join(ft_root, "src/fastertransformer/utils/cuda_utils.h")
+with open(cuda_utils_path) as f:
+    cu = f.read()
+
+cu = cu.replace(
+    "inline int getDeviceCount()\n"
+    "{\n"
+    "    int count = 0;\n"
+    "    check_cuda_error(cudaGetDeviceCount(&count));\n"
+    "    return count;\n"
+    "}",
+    "inline int getDeviceCount()\n"
+    "{\n"
+    "    int count = 0;\n"
+    "    cudaError_t err = cudaGetDeviceCount(&count);\n"
+    "    if (err != cudaSuccess) {\n"
+    "        count = 0;\n"
+    "        cudaGetLastError();\n"
+    "    }\n"
+    "    return count;\n"
+    "}",
+    1,
+)
+
+with open(cuda_utils_path, "w") as f:
+    f.write(cu)
+
+print("Patched cuda_utils.h (getDeviceCount) OK")
