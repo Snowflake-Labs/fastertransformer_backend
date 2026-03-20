@@ -1,6 +1,9 @@
 import re
+import sys
 
-path = "_deps/repo-ft-src/src/fastertransformer/utils/cuda_type_utils.cuh"
+ft_root = sys.argv[1] if len(sys.argv) > 1 else "_deps/repo-ft-src"
+
+path = f"{ft_root}/src/fastertransformer/utils/cuda_type_utils.cuh"
 with open(path) as f:
     src = f.read()
 
@@ -39,7 +42,7 @@ print("Patched cuda_type_utils.cuh OK")
 # fallback definitions for __CUDA_ARCH__ < 800 now cause ambiguous overloads.
 # Gate them out when compiling with CUDA 13+.
 # ---------------------------------------------------------------------------
-bf16_path = "_deps/repo-ft-src/src/fastertransformer/utils/cuda_bf16_fallbacks.cuh"
+bf16_path = f"{ft_root}/src/fastertransformer/utils/cuda_bf16_fallbacks.cuh"
 with open(bf16_path) as f:
     bf16_src = f.read()
 
@@ -60,7 +63,7 @@ print("Patched cuda_bf16_fallbacks.cuh OK")
 # ---------------------------------------------------------------------------
 # Patch cublasMMWrapper.h — GCC 13 no longer transitively includes <array>.
 # ---------------------------------------------------------------------------
-cublas_h_path = "_deps/repo-ft-src/src/fastertransformer/utils/cublasMMWrapper.h"
+cublas_h_path = f"{ft_root}/src/fastertransformer/utils/cublasMMWrapper.h"
 with open(cublas_h_path) as f:
     cublas_h = f.read()
 
@@ -80,8 +83,6 @@ print("Patched cublasMMWrapper.h OK")
 # removed.  cub::Max -> ::cuda::maximum<>, cub::Sum -> ::cuda::std::plus<>.
 # ---------------------------------------------------------------------------
 import glob, os
-
-ft_root = "_deps/repo-ft-src"
 cub_files = (
     glob.glob(os.path.join(ft_root, "**", "*.cu"), recursive=True)
     + glob.glob(os.path.join(ft_root, "**", "*.cuh"), recursive=True)
@@ -155,3 +156,23 @@ with open(cuda_utils_path, "w") as f:
     f.write(cu)
 
 print("Patched cuda_utils.h (getDeviceCount) OK")
+
+# ---------------------------------------------------------------------------
+# Patch root CMakeLists.txt — the hardcoded relative path to repo-core headers
+# (../repo-core-src/include) only works when FT source is inside _deps/.
+# Use the cmake variable repo-core_SOURCE_DIR instead, which FetchContent sets.
+# ---------------------------------------------------------------------------
+ft_cmake = os.path.join(ft_root, "CMakeLists.txt")
+with open(ft_cmake) as f:
+    ftcm = f.read()
+
+ftcm = ftcm.replace(
+    '${PROJECT_SOURCE_DIR}/../repo-core-src/include',
+    '${repo-core_SOURCE_DIR}/include',
+    1,
+)
+
+with open(ft_cmake, "w") as f:
+    f.write(ftcm)
+
+print("Patched FT CMakeLists.txt (repo-core include path) OK")

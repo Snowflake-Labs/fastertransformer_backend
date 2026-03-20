@@ -111,6 +111,9 @@ if (EXISTS ${FT_DIR})
     SOURCE_DIR ${FT_DIR}
   )
 else()
+  # Fallback: fetch FT source at configure time.
+  # In practice this is overridden by the Dockerfile which pre-clones,
+  # patches, and passes -D FT_DIR=<path> to cmake.
   FetchContent_Declare(
     repo-ft
     GIT_REPOSITORY https://github.com/neevaco/FasterTransformer.git 
