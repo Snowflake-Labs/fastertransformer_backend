@@ -111,6 +111,9 @@ if (EXISTS ${FT_DIR})
     SOURCE_DIR ${FT_DIR}
   )
 else()
+  # Fallback: fetch FT source at configure time.
+  # In practice this is overridden by the Dockerfile which pre-clones,
+  # patches, and passes -D FT_DIR=<path> to cmake.
   FetchContent_Declare(
     repo-ft
     GIT_REPOSITORY https://github.com/neevaco/FasterTransformer.git 
@@ -171,7 +174,7 @@ target_link_directories(
   ${CUDA_PATH}/lib64
   )
 
-target_compile_features(triton-fastertransformer-backend PRIVATE cxx_std_14)
+target_compile_features(triton-fastertransformer-backend PRIVATE cxx_std_17)
 target_compile_options(
   triton-fastertransformer-backend PRIVATE
   $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
