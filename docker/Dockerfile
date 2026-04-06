@@ -23,7 +23,25 @@ RUN apt-get update && \
         libb64-dev \
         libz-dev \
         rapidjson-dev && \
-    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    # apt-get upgrade may pull in a newer libcusparselt0-cuda-13 than the one the base
+    # Triton image was built with. The base image uses dpkg-divert to redirect the
+    # versioned library (e.g. libcusparseLt.so.0.8.1.1) from its Debian-standard path
+    # (/usr/lib/x86_64-linux-gnu/libcusparseLt/13/) to the CUDA path
+    # (/usr/local/cuda/lib64/), and creates libcusparseLt.so.0 -> libcusparseLt.so.0.8.1.1
+    # there. The diversion is registered per exact filename, so when the package upgrades
+    # (e.g. to 0.9.0.3) the new versioned file lands in the Debian path with no diversion,
+    # breaking the libcusparseLt.so.0 symlink that libtorch_cuda.so depends on.
+    # Additionally, libcusparselt0-cuda-13 >= 0.9.x stopped shipping libcusparseLt.so.0
+    # as a package file, making the pre-existing .so.0 diversion inert.
+    # Fix: register the diversion for whatever versioned file was actually installed, move
+    # it to the CUDA path, and recreate the .so.0 symlink manually.
+    CUSPARSE_LIB=$(dpkg -L libcusparselt0-cuda-13 | grep -E 'libcusparseLt\.so\.0\.[0-9]') && \
+    CUSPARSE_NAME=$(basename "$CUSPARSE_LIB") && \
+    dpkg-divert --local --rename \
+        --divert "/usr/local/cuda/lib64/${CUSPARSE_NAME}" \
+        --add "$CUSPARSE_LIB" && \
+    ln -sf "${CUSPARSE_NAME}" /usr/local/cuda/lib64/libcusparseLt.so.0
 
 RUN pip3 install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cu118 torch==2.6.0+cu118 && \
     pip3 install --no-cache-dir --extra-index-url https://pypi.ngc.nvidia.com regex fire tritonclient[all] && \
